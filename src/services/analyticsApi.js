@@ -2,9 +2,6 @@ import axios from "axios";
 
 const BASE_URL = "https://api.github.com";
 
-const MAX_RETRIES = 5;
-const RETRY_DELAY = 1500;
-
 const getCacheKey = (owner, repo) =>
   `github-analytics:${owner}:${repo}`;
 
@@ -12,9 +9,11 @@ const sleep = (ms) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 const fetchGitHubStats = async (url) => {
+  const MAX_ATTEMPTS = 10;
+
   for (
     let attempt = 0;
-    attempt <= MAX_RETRIES;
+    attempt < MAX_ATTEMPTS;
     attempt += 1
   ) {
     try {
@@ -25,17 +24,36 @@ const fetchGitHubStats = async (url) => {
       });
 
       /*
-        GitHub may return 202 while statistics
-        are still being calculated.
+        GitHub has finished calculating
+        the repository statistics.
       */
 
-      if (response.status !== 202) {
+      if (response.status === 200) {
         return response.data;
       }
 
-      if (attempt < MAX_RETRIES) {
-        await sleep(RETRY_DELAY);
+      /*
+        GitHub is still calculating
+        the repository statistics.
+      */
+
+      if (response.status === 202) {
+        const delay = Math.min(
+          2000 * Math.pow(2, attempt),
+          10000
+        );
+
+        console.log(
+          `GitHub is calculating statistics. Retrying in ${
+            delay / 1000
+          } seconds...`
+        );
+
+        await sleep(delay);
+        continue;
       }
+
+      return response.data;
     } catch (error) {
       const status = error.response?.status;
       const message = error.response?.data?.message;
@@ -57,6 +75,10 @@ const fetchGitHubStats = async (url) => {
         remaining,
         reset,
       });
+
+      /*
+        Rate limit handling
+      */
 
       if (status === 403) {
         if (remaining === "0") {
@@ -86,7 +108,7 @@ const fetchGitHubStats = async (url) => {
   }
 
   throw new Error(
-    "GitHub is still calculating repository statistics. Please try again shortly."
+    "GitHub is taking longer than expected to calculate repository statistics. Please try again shortly."
   );
 };
 
@@ -104,9 +126,7 @@ export const fetchRepositoryAnalytics = async (
     getCacheKey(owner, repo);
 
   /*
-    Check session cache first.
-    This prevents unnecessary
-    repeated GitHub API requests.
+    Check browser session cache first.
   */
 
   const cachedData =
@@ -126,7 +146,7 @@ export const fetchRepositoryAnalytics = async (
     `${encodeURIComponent(repo)}/stats`;
 
   /*
-    GitHub statistics endpoints
+    Required GitHub endpoints
   */
 
   const codeFrequencyUrl =
@@ -139,8 +159,7 @@ export const fetchRepositoryAnalytics = async (
     `${baseUrl}/contributors`;
 
   /*
-    Fetch sequentially instead of
-    sending all requests together.
+    Fetch sequentially.
   */
 
   const codeFrequency =
@@ -159,7 +178,7 @@ export const fetchRepositoryAnalytics = async (
     );
 
   /*
-    Normalize response
+    Normalize API response.
   */
 
   const result = {
@@ -180,7 +199,7 @@ export const fetchRepositoryAnalytics = async (
   };
 
   /*
-    Cache successful response
+    Cache successful response.
   */
 
   sessionStorage.setItem(
@@ -189,4 +208,4 @@ export const fetchRepositoryAnalytics = async (
   );
 
   return result;
-};  
+};
