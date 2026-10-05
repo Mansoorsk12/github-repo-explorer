@@ -1,4 +1,3 @@
-
 import {
   Card,
   CardContent,
@@ -7,110 +6,170 @@ import {
   Box,
   Chip,
   IconButton,
+  Stack,
+  Tooltip,
 } from "@mui/material";
 
-import StarIcon from "@mui/icons-material/Star";
-import BugReportIcon from "@mui/icons-material/BugReport";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { Link as RouterLink } from "react-router-dom";
 
-function RepoCard({ repo, onExpand }) {
+import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import BugReportRoundedIcon from "@mui/icons-material/BugReportRounded";
+import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
+import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
+
+function RepoCard({ repo }) {
+
   const formatNumber = (number) =>
-    new Intl.NumberFormat("en-US").format(number);
+    new Intl.NumberFormat("en-US", {
+      notation: "compact",
+    }).format(number);
+
+  const analyticsUrl =
+    `/repository/${repo.owner.login}/${repo.name}`;
 
   return (
     <Card
-      onClick={() => onExpand(repo)}
-      sx={{
-        mb: 2,
-        cursor: "pointer",
-        borderRadius: 2,
-        bgcolor: "#f8f9fa",
-        boxShadow: "none",
-        transition: "0.2s",
-        "&:hover": {
-          boxShadow: 3,
-          transform: "translateY(-2px)",
-        },
-      }}
+      component="article"
+      className="repo-card"
     >
-      <CardContent
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 2,
-          p: 2,
-          "&:last-child": { pb: 2 },
-        }}
-      >
-        <Avatar
-          src={repo.owner.avatar_url}
-          alt={repo.owner.login}
-          sx={{
-            width: 85,
-            height: 85,
-            borderRadius: 2,
-          }}
-        />
 
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography
-            variant="h6"
-            fontWeight={700}
-            sx={{ overflowWrap: "anywhere" }}
-          >
-            {repo.full_name}
-          </Typography>
+      <CardContent className="repo-card-content">
 
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              mb: 1.5,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
-          >
-            {repo.description || "No description available"}
-          </Typography>
+        {/* OWNER */}
 
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              flexWrap: "wrap",
-            }}
-          >
-            <Chip
-              icon={<StarIcon />}
-              label={formatNumber(repo.stargazers_count)}
-              variant="outlined"
-            />
+        <Box
+          component="a"
+          href={repo.owner.html_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="owner-avatar-link"
+        >
 
-            <Chip
-              icon={<BugReportIcon />}
-              label={formatNumber(repo.open_issues_count)}
-              variant="outlined"
-            />
+          <Avatar
+            src={repo.owner.avatar_url}
+            alt={repo.owner.login}
+            className="repo-avatar"
+          />
 
-            <Typography variant="caption" color="text.secondary">
-              By {repo.owner.login}
-            </Typography>
-          </Box>
         </Box>
 
-        <IconButton
-          aria-label="View repository details"
-          onClick={(event) => {
-            event.stopPropagation();
-            onExpand(repo);
-          }}
-        >
-          <ChevronRightIcon fontSize="large" />
-        </IconButton>
+
+        {/* MAIN CONTENT */}
+
+        <Box className="repo-main">
+
+          <Box className="repo-title-row">
+
+            <Box sx={{ minWidth: 0 }}>
+
+              {/* REPOSITORY NAME */}
+
+              <Typography
+                component={RouterLink}
+                to={analyticsUrl}
+                className="repo-name"
+              >
+                {repo.full_name}
+              </Typography>
+
+
+              {/* GITHUB LINK */}
+
+              <Typography
+                component="a"
+                href={repo.html_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="repo-external-link"
+              >
+                View on GitHub
+
+                <OpenInNewRoundedIcon
+                  sx={{
+                    fontSize: 13,
+                  }}
+                />
+
+              </Typography>
+
+            </Box>
+
+
+            {/* ANALYTICS BUTTON */}
+
+            <Tooltip title="Open repository analytics">
+
+              <IconButton
+                component={RouterLink}
+                to={analyticsUrl}
+                className="repo-arrow"
+                aria-label="Open repository analytics"
+              >
+
+                <ArrowForwardRoundedIcon />
+
+              </IconButton>
+
+            </Tooltip>
+
+          </Box>
+
+
+          {/* DESCRIPTION */}
+
+          <Typography className="repo-description">
+
+            {repo.description ||
+              "No description available for this repository."}
+
+          </Typography>
+
+
+          {/* STATS */}
+
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            flexWrap="wrap"
+            alignItems="center"
+          >
+
+            <Chip
+              icon={<StarRoundedIcon />}
+              label={`${formatNumber(
+                repo.stargazers_count
+              )} stars`}
+              className="stat-chip"
+            />
+
+            <Chip
+              icon={<BugReportRoundedIcon />}
+              label={`${formatNumber(
+                repo.open_issues_count
+              )} issues`}
+              className="stat-chip"
+            />
+
+
+            {/* PROFILE LINK */}
+
+            <Typography
+              component="a"
+              href={repo.owner.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="owner-link"
+            >
+              @{repo.owner.login}
+            </Typography>
+
+          </Stack>
+
+        </Box>
+
       </CardContent>
+
     </Card>
   );
 }
