@@ -5,6 +5,11 @@ const initialState = {
   repo: null,
   contributors: [],
   weeks: [],
+  totals: {
+    commits: {},
+    additions: {},
+    deletions: {},
+  },
   metric: "commits",
   loading: false,
   error: null,
@@ -22,11 +27,19 @@ const analyticsSlice = createSlice({
       state.error = null;
       state.contributors = [];
       state.weeks = [];
+
+      state.totals = {
+        commits: {},
+        additions: {},
+        deletions: {},
+      };
     },
 
     fetchAnalyticsSuccess: (state, action) => {
       state.contributors = action.payload.contributors;
       state.weeks = action.payload.weeks;
+      state.totals = action.payload.totals;
+
       state.loading = false;
       state.error = null;
     },
