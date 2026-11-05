@@ -106,4 +106,5 @@ Try the deployed application:
 ---
 
 ⭐ If you find this project useful, consider starring the repository.
+Thank you
 ---
