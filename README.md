@@ -22,7 +22,7 @@ The project helped me strengthen my skills in React development, API integration
 ## 🛠️ Tech Stack
 
 | Technology | Purpose |
-|---|---|
+|----|----|
 | React.js | Building reusable UI components |
 | JavaScript (ES6+) | Application logic and data processing |
 | HTML5 | Application structure |
